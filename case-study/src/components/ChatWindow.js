@@ -60,8 +60,11 @@ function ChatWindow() {
               }}
               rows="3"
             />
-            <button className="send-button" onClick={handleSend}>
+            <button className="send-button" style={{background: '#f3c04c', color: 'black'}} onClick={handleSend}>
               Send
+            </button>
+            <button className="send-button" style={{marginLeft: '20px', background: '#337778'}}>
+              New Chat
             </button>
           </div>
       </div>
