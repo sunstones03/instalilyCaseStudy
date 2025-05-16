@@ -5,6 +5,8 @@ import { marked } from "marked";
 
 function ChatWindow() {
 
+  // Initialize the thread and chat agent
+
   const defaultMessage = [{
     role: "assistant",
     content: "Hi, how can I help you today?"
@@ -63,7 +65,7 @@ function ChatWindow() {
             <button className="send-button" style={{background: '#f3c04c', color: 'black'}} onClick={handleSend}>
               Send
             </button>
-            <button className="send-button" style={{marginLeft: '20px', background: '#337778'}}>
+            <button className="send-button" style={{marginLeft: '20px', background: '#337778'}} onClick={() => window.location.reload()}>
               New Chat
             </button>
           </div>

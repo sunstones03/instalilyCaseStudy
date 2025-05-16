@@ -38,6 +38,7 @@ Never provide wrong links.
 app = Flask(__name__)
 CORS(app)  # Allow CORS for all routes
 app.config["SECRET_KEY"] = "secret"
+app.config["thread_id"] = np.random.randint(10000)
 
 @app.route('/api/chat', methods=["POST","GET"])
 def chat():
@@ -45,23 +46,25 @@ def chat():
 
         data = request.get_json()
         query = data.get('query', '')
-        new_thread = data.get('new_thread', '')
-
-        ## check if starting a new thread, 
-        ## if so then reset thread and send system prompt
-        if new_thread:
-            session['thread_id'] = np.random.randint(10000)
-            config = {"configurable" : {"thread_id" : session['thread_id']}}
-            msg = {"messages": [SystemMessage(content=system_prompt)]}
-            agent_executor.invoke(msg, config)
 
         ## create input for llm agent
-        config = {"configurable" : {"thread_id" : session['thread_id']}}
+        config = {"configurable" : {"thread_id" : app.config['thread_id']}}
         msg = {"messages": [HumanMessage(content=query)]}
+        
+        print(app.config['thread_id'])
 
         answer = agent_executor.invoke(msg, config)["messages"][-1].content
-        print(session['thread_id'])
         return jsonify({"answer": answer})
+
+@app.route('/api/init_thread', methods=["POST","GET"])
+def init_thread():
+    app.config["thread_id"] = np.random.randint(10000)
+    print(app.config['thread_id'])
+    config = {"configurable" : {"thread_id" : app.config['thread_id']}}
+    msg = {"messages": [SystemMessage(content=system_prompt)]}
+    agent_executor.invoke(msg, config)
+
+    return jsonify(dict())
 
 if __name__ == '__main__':
 
