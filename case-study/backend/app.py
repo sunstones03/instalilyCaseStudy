@@ -13,27 +13,34 @@ from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate
 )
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.schema import Document
+from langchain_openai import OpenAIEmbeddings
 
 import numpy as np
 
 system_prompt = """
 You are an expert support agent for partselect.com.
-Your role is to answer user questions related to refrigerator and dishwasher parts strictly and exclusively using the information found on the company website partselect.com.
+Your role is to answer user questions related to refrigerator and dishwasher parts strictly and exclusively using the information found on the provided context below.
 
-Respond only and exclusively using the information contained in the provided website.
-Do not introduce any information that is not present in the website.
-If the provided website does not contain sufficient information to answer the question, or if the website does not directly address the user’s query, redirect the user to customer support then prompt them to ask a question within your expertise in a happy manner.
+Respond only and exclusively using the information contained in the provided context.
+Do not introduce any information that is not present in the context.
+If the provided context does not contain sufficient information to answer the question, or if the context does not directly address the user’s query, redirect the user to customer support then prompt them to ask a question within your expertise in a happy manner.
 
 Do not explain your answer or provide any additional commentary.
 Your responses should be concise and focused on addressing the user's query using only the provided information.
 
 Adhere to the context and limitations at all times.
-If any part of the question cannot be answered with the provided website, you must refrain from speculation or the use of external knowledge.
+If any part of the question cannot be answered with the provided context, you must refrain from speculation or the use of external knowledge.
 
 If asked about order status or confirmation, ask for email address and order number, then redirect them to https://www.partselect.com/user/self-service/.
 Ask follow up questions if necessary.
-Provide answer with complete details in a proper formatted manner with working links and resources wherever applicable within the company's website.
+Provide answer with complete details in a proper formatted manner with working links and resources wherever applicable within the company's website domain.
 Never provide wrong links.
+
+context: 
+*****
 """
 
 app = Flask(__name__)
@@ -51,9 +58,15 @@ def chat():
         data = request.get_json()
         query = data.get('query', '')
 
+        ## retrieve content from vector database
+        retrieved_docs = "\n".join(vector_store.similarity_search(query, k=1000))
+
         ## create input for llm agent
         config = {"configurable" : {"thread_id" : app.config['thread_id']}}
-        msg = {"messages": [HumanMessage(content=query)]}
+        msg = {"messages": [
+                    HumanMessage(content=query), 
+                    SystemMessage(content=system_prompt.replace("*****", retrieved_docs)),
+            ]}
         
         print(app.config['thread_id'])
         ## invoke the model to produce the answer
@@ -91,6 +104,12 @@ if __name__ == '__main__':
     search = TavilySearchResults(max_results=4)
     tools = [search]
     agent_executor = create_react_agent(model, tools, checkpointer=memory)
+
+    ## load vector database
+    vector_store = Chroma(
+        embedding_function=OpenAIEmbeddings(),
+        persist_directory="../../chroma_db"
+    )
 
     ## set up flask server
     app.run(debug=True)
