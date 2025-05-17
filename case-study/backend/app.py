@@ -30,6 +30,7 @@ Your responses should be concise and focused on addressing the user's query usin
 Adhere to the context and limitations at all times.
 If any part of the question cannot be answered with the provided website, you must refrain from speculation or the use of external knowledge.
 
+If asked about order status or confirmation, ask for email address and order number, then redirect them to https://www.partselect.com/user/self-service/.
 Ask follow up questions if necessary.
 Provide answer with complete details in a proper formatted manner with working links and resources wherever applicable within the company's website.
 Never provide wrong links.
@@ -38,7 +39,7 @@ Never provide wrong links.
 app = Flask(__name__)
 CORS(app)  # Allow CORS for all routes
 app.config["SECRET_KEY"] = "secret"
-app.config["thread_id"] = np.random.randint(10000)
+app.config["thread_id"] = np.random.randint(1000000)
 
 @app.route('/api/chat', methods=["POST","GET"])
 def chat():
@@ -58,7 +59,7 @@ def chat():
 
 @app.route('/api/init_thread', methods=["POST","GET"])
 def init_thread():
-    app.config["thread_id"] = np.random.randint(10000)
+    app.config["thread_id"] = np.random.randint(1000000)
     print(app.config['thread_id'])
     config = {"configurable" : {"thread_id" : app.config['thread_id']}}
     msg = {"messages": [SystemMessage(content=system_prompt)]}
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         timeout=None,
         max_retries=2,
     )
-    search = TavilySearchResults(max_results=2)
+    search = TavilySearchResults(max_results=4)
     tools = [search]
     agent_executor = create_react_agent(model, tools, checkpointer=memory)
 

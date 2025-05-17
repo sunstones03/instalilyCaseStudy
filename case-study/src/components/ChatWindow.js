@@ -9,7 +9,7 @@ function ChatWindow() {
 
   const defaultMessage = [{
     role: "assistant",
-    content: "Hi, how can I help you today?"
+    content: "Hello! Welcome to PartSelect! Looking for a part or need help with your appliance repair? I’m here to assist you—just tell me the appliance, the issue, or the part you’re after, and we’ll get started!"
   }];
 
   const [messages,setMessages] = useState(defaultMessage)
