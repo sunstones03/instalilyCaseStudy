@@ -43,6 +43,9 @@ app.config["thread_id"] = np.random.randint(1000000)
 
 @app.route('/api/chat', methods=["POST","GET"])
 def chat():
+    '''
+    description: produces the AI message given the human query
+    '''
     if request.method == "POST":
 
         data = request.get_json()
@@ -53,12 +56,15 @@ def chat():
         msg = {"messages": [HumanMessage(content=query)]}
         
         print(app.config['thread_id'])
-
+        ## invoke the model to produce the answer
         answer = agent_executor.invoke(msg, config)["messages"][-1].content
         return jsonify({"answer": answer})
 
 @app.route('/api/init_thread', methods=["POST","GET"])
 def init_thread():
+    '''
+    description: initializes the conversation thread, generates new thread_id, and sends the initial system prompt
+    '''
     app.config["thread_id"] = np.random.randint(1000000)
     print(app.config['thread_id'])
     config = {"configurable" : {"thread_id" : app.config['thread_id']}}
@@ -69,7 +75,10 @@ def init_thread():
 
 if __name__ == '__main__':
 
+    ## create memory
     memory = MemorySaver()
+
+    ## call deepseek-chat model
     model = ChatDeepSeek(
         model="deepseek-chat",
         temperature=0,
@@ -77,6 +86,8 @@ if __name__ == '__main__':
         timeout=None,
         max_retries=2,
     )
+
+    ## create search tool
     search = TavilySearchResults(max_results=4)
     tools = [search]
     agent_executor = create_react_agent(model, tools, checkpointer=memory)
